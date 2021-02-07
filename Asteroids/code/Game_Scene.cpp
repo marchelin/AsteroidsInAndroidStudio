@@ -18,25 +18,26 @@ namespace example
 {
     Game_Scene::Texture_Data Game_Scene::textures_data[] =
     {
-        { ID(loading),       "game-scene/loading.png"      },
-        { ID(background),    "game-scene/background.png"   },
-        { ID(top_border),    "game-scene/top_border.png"   },
-        { ID(bottom_border), "game-scene/bottom_border.png"},
-        { ID(right_border),  "game-scene/right_border.png" },
-        { ID(left_border),   "game-scene/left_border.png"  },
-        { ID(Handle_Outline),   "game-scene/Handles/Red_Button.png"  },
-        { ID(Handle_Ridged),   "game-scene/Handles/Handle_Ridged.png"  },
-        { ID(Red_Button),   "game-scene/Handles/Handle_Outline.png"  },
-        { ID(asteroid),      "game-scene/asteroid.png"     },
-        { ID(ship),          "game-scene/ship.png"         },
-        { ID(bullet),        "game-scene/bullet.png"       },
+        { ID(loading),        "game-scene/loading.png"               },
+        { ID(background),     "game-scene/background.png"            },
+        { ID(top_border),     "game-scene/top_border.png"            },
+        { ID(bottom_border),  "game-scene/bottom_border.png"         },
+        { ID(right_border),   "game-scene/right_border.png"          },
+        { ID(left_border),    "game-scene/left_border.png"           },
+        { ID(Handle_Outline), "game-scene/Handles/Red_Button.png"    },
+        { ID(Handle_Ridged),  "game-scene/Handles/Handle_Ridged.png" },
+        { ID(Red_Button),     "game-scene/Handles/Handle_Outline.png"},
+        { ID(asteroid),       "game-scene/asteroid.png"              },
+        { ID(ship),           "game-scene/ship.png"                  },
+        { ID(bullet),         "game-scene/bullet.png"                },
     };
 
     unsigned Game_Scene::textures_count = sizeof(textures_data) / sizeof(Texture_Data);
 
-    constexpr float Game_Scene::  asteroid_speed;
-    constexpr float Game_Scene::      ship_speed;
-    constexpr float Game_Scene::      bullet_speed;
+    constexpr float Game_Scene:: asteroid_speed;
+    constexpr float Game_Scene::     ship_speed;
+    constexpr float Game_Scene::   bullet_speed;
+    constexpr float Game_Scene::   Red_Button_speed;
 
     Game_Scene::Game_Scene()
     {
@@ -73,24 +74,27 @@ namespace example
         {
             if (gameplay == WAITING_TO_START)
             {
-                start_playing ();           // Se empieza a jugar cuando el usuario toca la pantalla por primera vez
+                start_playing ();
             }
             else switch (event.id)
+            {
+                case ID(touch-started):
                 {
-                    case ID(touch-started):
-                    case ID(touch-moved):
-                    {
-                        user_target_x = *event[ID(x)].as< var::Float > ();
-                        user_target_y = *event[ID(y)].as< var::Float > ();
-                        follow_target = true;
-                        break;
-                    }
-                    case ID(touch-ended):
-                    {
-                        follow_target = false;
-                        break;
-                    }
+                    screen_touched = true;
+                    break;
                 }
+                case ID(touch-moved):
+                {
+                    finger_position_x = *event[ID(x)].as< var::Float > ();
+                    finger_position_y = *event[ID(y)].as< var::Float > ();
+                    break;
+                }
+                case ID(touch-ended):
+                {
+                    screen_touched = false;
+                    break;
+                }
+            }
         }
     }
 
@@ -112,7 +116,7 @@ namespace example
 
             if (!canvas)
             {
-                 canvas = Canvas::create (ID(canvas), context, {{ canvas_width, canvas_height }});
+                canvas = Canvas::create (ID(canvas), context, {{ canvas_width, canvas_height }});
             }
 
             if (canvas)
@@ -140,12 +144,14 @@ namespace example
                 Texture_Data   & texture_data = textures_data[textures.size ()];
                 Texture_Handle & texture      = textures[texture_data.id] = Texture_2D::create (texture_data.id, context, texture_data.path);
 
-                if (texture) context->add (texture); else state = ERROR;
+                if (texture)
+                {
+                    context->add (texture);
+                }
 
             }
         }
-        else
-        if (timer.get_elapsed_seconds () > 1.f)
+        else if (timer.get_elapsed_seconds () > 1.f)
         {
             create_sprites ();
             restart_game   ();
@@ -219,10 +225,10 @@ namespace example
 
     void Game_Scene::restart_game()
     {
-         ship->set_position ({ canvas_width / 2.f, canvas_height / 2.f });
+        ship->set_position ({ canvas_width / 2.f, canvas_height / 2.f });
         ship->set_speed    ({ 0.f, 0.f });
 
-        asteroid->set_position ({ 200, canvas_height / 2.f });
+        asteroid->set_position ({ 100, 100});
         asteroid->set_speed    ({ 0.1f, 0.1f });
 
         gameplay = WAITING_TO_START;
@@ -249,8 +255,7 @@ namespace example
         }
 
         update_user ();
-
-        check_asteroid_collision ();
+        //check_asteroid_collision ();
     }
 
     float delta_x;
@@ -258,35 +263,45 @@ namespace example
 
     void Game_Scene::update_user ()
     {
-        delta_x = user_target_x - (Red_Button->get_position_x ());
-        delta_y = user_target_y - (Red_Button->get_position_y ());
+        delta_x = finger_position_x - (Red_Button->get_position_x ());
+        delta_y = finger_position_y - (Red_Button->get_position_y ());
 
-/*
-        bool DispararHaciaDelante;
-        bool DispararHaciaAtras;
-        bool DispararHaciaLaDerecha;
-        bool DispararHaciaLaIzquierda;
+        if(screen_touched == true)
+        {
+            if ((abs(delta_x) < 100) && (abs(delta_y) < 100))
+            {
+                if (delta_x < 0.f)
+                {
+                    //X_position = asteroid->get_position_x ();
+                    Red_Button->set_speed_x (-Red_Button_speed);
+                }
+                else if (delta_x > 0.f)
+                {
+                    //X_position = asteroid->get_position_x ();
+                    Red_Button->set_speed_x (+Red_Button_speed);
+                }
 
-        if(DispararHaciaDelante == true || DispararHaciaLaDerecha == true)
-        {
-            bullet->set_speed_x (-bullet_speed);
-            DispararHaciaDelante = false;
-            DispararHaciaLaDerecha = false;
+                if (delta_y < 0.f)
+                {
+                    //Y_position = asteroid->get_position_y ();
+                    Red_Button->set_speed_y (-Red_Button_speed);
+                }
+                else if (delta_y > 0.f)
+                {
+                    //Y_position = asteroid->get_position_y ();
+                    Red_Button->set_speed_y (+Red_Button_speed);
+                }
+            }
+            else
+            {
+                Red_Button->set_speed_x (0.f);
+                Red_Button->set_speed_y (0.f);
+            }
         }
-        else if(DispararHaciaAtras == true || DispararHaciaLaIzquierda == true)
+        else if(screen_touched == false)
         {
-            bullet->set_speed_x (+bullet_speed);
-            DispararHaciaAtras = false;
-            DispararHaciaLaIzquierda = false;
-        }
-*/
-        if ((abs(delta_x) < 100) && (abs(delta_y) < 100))
-        {
-            ship->set_speed    ({ 50.f, 0.f });
-        }
-        else
-        {
-            ship->set_speed    ({ -50.f, 0.f });
+            Red_Button->set_speed_x (0.f);
+            Red_Button->set_speed_y (0.f);
         }
     }
 
@@ -298,7 +313,7 @@ namespace example
         bullet->set_position ({ ship_position_x, ship_position_y }); //donde spawnea
         bullet->set_speed    ({ 1.f, 1.f });
 
-        //bullet->set_position ({ user_target_x, user_target_y }); //posicion si dispara
+        //bullet->set_position ({ finger_position_x, finger_position_y }); //posicion si dispara
         //bullet->set_speed    ({ 0.5f, 0.5f });
     }
 
@@ -314,36 +329,57 @@ namespace example
 
     void Game_Scene::check_asteroid_collision ()
     {
-        if (ship->get_position_y () > canvas_width- 50)
+        bool colisionaConDerecho = false;
+
+        bool touchedX;
+        bool touchedNegX;
+
+
+        //float LeftBorderPosition = ship->get_position_y () - (left_border->get_position_x ()); Borrar
+
+        if (ship->get_position_y () < canvas_height- 600)
         {
             ship->set_speed_y    ((-ship->get_speed_y ()));
         }
-        if (ship->get_position_y () > 50)
+        if (ship->get_position_y () > canvas_height- 50)
         {
             ship->set_speed_y    ((+ship->get_speed_y ()));
         }
-
-        if (asteroid->get_position_y () > canvas_height - 50)
-        {
-            //dvd->set_position_y (top_border->get_bottom_y () - dvd->get_height() / 2.f);
-            asteroid->set_speed_y    ((-asteroid->get_speed_y ()));
-        }
-        if (asteroid->get_position_y () < 50)
-        {
-            //dvd->set_position_y (bottom_border->get_top_y () + dvd->get_height() / 2.f);
-            asteroid->set_speed_y    (+asteroid->get_speed_y ());
-        }
-
-        if (asteroid->get_position_x () > canvas_width - 50)
-        {
-            //dvd->set_position_x (right_border->get_left_x () + dvd->get_width() / 2.f);
-            asteroid->set_speed_x    (-asteroid->get_speed_x ());
-        }
-        if (asteroid->get_position_x () < 50)
+        /*
+        if(ship->get_position_x () < canvas_width - left_border->get_width()) //Left
         {
             //dvd->set_position_x (left_border->get_right_x () + dvd->get_width() / 2.f);
-            asteroid->set_speed_x    (+asteroid->get_speed_x ());
+            ship->set_speed_x    (+ship->get_speed_x ());
         }
+        */
+        if (ship->get_position_x () < canvas_width - 100) //Right 100%
+        {
+            ship->set_speed_x    (+ship->get_speed_x ());
+        }
+        /*
+        if (asteroid->get_position_y () < canvas_height- 50)
+        {
+            //dvd->set_position_y (top_border->get_bottom_y () - dvd->get_height() / 2.f);
+            asteroid->set_speed_y (+100.f);
+        }
+
+        if (asteroid->get_position_y () > 50)
+        {
+            //dvd->set_position_y (bottom_border->get_top_y () + dvd->get_height() / 2.f);
+            asteroid->set_speed_y    (-50.f);
+        }
+
+        if(asteroid->get_position_x () < right_border->get_position_x())
+        {
+            //dvd->set_position_x (right_border->get_left_x () + dvd->get_width() / 2.f);
+            asteroid->set_speed_x    (+100.f);
+        }
+        if(asteroid->get_position_x () > left_border->get_position_x())
+        {
+            //dvd->set_position_x (left_border->get_right_x () + dvd->get_width() / 2.f);
+            asteroid->set_speed_x    (-100.f);
+        }
+         */
 
         /*
         if (asteroid->intersects (*ship))

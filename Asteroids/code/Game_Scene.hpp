@@ -21,7 +21,6 @@
 
     namespace example
     {
-
         using basics::Id;
         using basics::Timer;
         using basics::Canvas;
@@ -29,18 +28,12 @@
 
         class Game_Scene : public basics::Scene
         {
-
-            // Estos typedefs pueden ayudar a hacer el código más compacto y claro:
-
             typedef std::shared_ptr < Sprite     >     Sprite_Handle;
             typedef std::list< Sprite_Handle     >     Sprite_List;
             typedef std::shared_ptr< Texture_2D  >     Texture_Handle;
             typedef std::map< Id, Texture_Handle >     Texture_Map;
             typedef basics::Graphics_Context::Accessor Context;
 
-            /**
-             * Representa el estado de la escena en su conjunto.
-             */
             enum State
             {
                 LOADING,
@@ -48,9 +41,6 @@
                 ERROR
             };
 
-            /**
-             * Representa el estado del juego cuando el estado de la escena es RUNNING.
-             */
             enum Gameplay_State
             {
                 UNINITIALIZED,
@@ -60,174 +50,100 @@
 
         private:
 
-            /**
-             * Array de estructuras con la información de las texturas (Id y ruta) que hay que cargar.
-             */
             static struct   Texture_Data { Id id; const char * path; } textures_data[];
 
-            /**
-             * Número de items que hay en el array textures_data.
-             */
             static unsigned textures_count;
 
         private:
 
             static constexpr float   bullet_speed = 400.f;
-            static constexpr float   asteroid_speed = 100.f;        ///< Velocidad a la que se mueve la bola (en unideades virtuales por segundo).
-            static constexpr float   ship_speed = 2000.f;        ///< Velocidad a la que se mueven ambos jugadores (en unideades virtuales por segundo).
+            static constexpr float   asteroid_speed = 300.f;
+            static constexpr float   ship_speed = 2000.f;
+            static constexpr float   Red_Button_speed = 2000.f;
 
             struct Touch
             {
-                int32_t id;                             ///< Un valor de ID negativo implica que el touch no estÃ¡ siendo usado
+                int32_t id;
             };
 
         private:
 
-            State          state;                               ///< Estado de la escena.
-            Gameplay_State gameplay;                            ///< Estado del juego cuando la escena está RUNNING.
-            bool           suspended;                           ///< true cuando la escena está en segundo plano y viceversa.
+            State          state;
+            Gameplay_State gameplay;
+            bool           suspended;
 
-            unsigned       canvas_width;                        ///< Ancho de la resolución virtual usada para dibujar.
-            unsigned       canvas_height;                       ///< Alto  de la resolución virtual usada para dibujar.
+            unsigned       canvas_width;
+            unsigned       canvas_height;
 
-            Texture_Map    textures;                            ///< Mapa  en el que se guardan shared_ptr a las texturas cargadas.
-            Sprite_List    sprites;                             ///< Lista en la que se guardan shared_ptr a los sprites creados.
+            Texture_Map    textures;
+            Sprite_List    sprites;
 
             Sprite       * bg_image;
-            Sprite       * top_border;                          ///< Puntero al sprite de la lista de sprites que representa el borde superior.
-            Sprite       * bottom_border;                       ///< Puntero al sprite de la lista de sprites que representa el borde inferior.
-            Sprite       * right_border;                       ///< Puntero al sprite de la lista de sprites que representa el borde inferior.
-            Sprite       * left_border;                       ///< Puntero al sprite de la lista de sprites que representa el borde inferior.
-            Sprite       * Handle_Outline;                       ///< Puntero al sprite de la lista de sprites que representa el borde inferior.
-            Sprite       * Handle_Ridged;                       ///< Puntero al sprite de la lista de sprites que representa el borde inferior.
-            Sprite       * Red_Button;                       ///< Puntero al sprite de la lista de sprites que representa el borde inferior.
-            Sprite       * ship;                                ///< Puntero al sprite de la lista de sprites que representa al jugador derecho.
+            Sprite       * top_border;
+            Sprite       * bottom_border;
+            Sprite       * right_border;
+            Sprite       * left_border;
+            Sprite       * Handle_Outline;
+            Sprite       * Handle_Ridged;
+            Sprite       * Red_Button;
+            Sprite       * ship;
             Sprite       * asteroid;
-            Sprite       * bullet;                            ///< Puntero al sprite de la lista de sprites que representa a la bola.
+            Sprite       * bullet;
 
             bool           Start_redButton;
-            bool           follow_target;                       ///< true si el usuario está tocando la pantalla y su player ir hacia donde toca.
-            float          user_target_x;                       ///< Coordenada Y hacia donde debe ir el player del usuario cuando este toca la pantalla.
-            float          user_target_y;                      ///< Coordenada Y hacia donde debe ir el player del usuario cuando este toca la pantalla.
-            //float          user_target_z;
+            bool           screen_touched;
+            float          finger_position_x;
+            float          finger_position_y;
 
-            Timer          timer;                               ///< Cronómetro usado para medir intervalos de tiempo
+            Timer          timer;
 
-            Touch    touches[10];                       ///< Se gestionan hasta 10 touches simultÃ¡neos
+            Touch    touches[10];
 
         public:
 
-            /**
-             * Solo inicializa los atributos que deben estar inicializados la primera vez, cuando se
-             * crea la escena desde cero.
-             */
             Game_Scene();
 
-            /**
-             * Este método lo llama Director para conocer la resolución virtual con la que está
-             * trabajando la escena.
-             * @return Tamaño en coordenadas virtuales que está usando la escena.
-             */
             basics::Size2u get_view_size () override
             {
                 return { canvas_width, canvas_height };
             }
 
-            /**
-             * Aquí se inicializan los atributos que deben restablecerse cada vez que se inicia la escena.
-             * @return
-             */
             bool initialize () override;
 
-            /**
-             * Este método lo invoca Director automáticamente cuando el juego pasa a segundo plano.
-             */
             void suspend () override;
 
-            /**
-             * Este método lo invoca Director automáticamente cuando el juego pasa a primer plano.
-             */
             void resume () override;
 
-            /**
-             * Este método se invoca automáticamente una vez por fotograma cuando se acumulan
-             * eventos dirigidos a la escena.
-             */
             void handle (basics::Event & event) override;
 
-            /**
-             * Este método se invoca automáticamente una vez por fotograma para que la escena
-             * actualize su estado.
-             */
             void update (float time) override;
 
-            /**
-             * Este método se invoca automáticamente una vez por fotograma para que la escena
-             * dibuje su contenido.
-             */
             void render (Context & context) override;
 
         private:
 
-            /**
-             * En este método se cargan las texturas (una cada fotograma para facilitar que la
-             * propia carga se pueda pausar cuando la aplicación pasa a segundo plano).
-             */
             void load_textures ();
 
-            /**
-             * En este método se crean los sprites cuando termina la carga de texturas.
-             */
             void create_sprites ();
 
-            /**
-             * Se llama cada vez que se debe reiniciar el juego. En concreto la primera vez y cada
-             * vez que un jugador pierde.
-             */
             void restart_game ();
 
-            /**
-             * Cuando se ha reiniciado el juego y el usuario toca la pantalla por primera vez se
-             * pone la bola en movimiento en una dirección al azar.
-             */
             void start_playing ();
 
-
-
-            /**
-             * Actualiza el estado del juego cuando el estado de la escena es RUNNING.
-             */
             void run_simulation (float time);
 
-            /**
-             * Hace que el player derecho se mueva hacia el punto de la pantalla que toca el usuario.
-             */
             void update_user ();
 
             void sapwn_bullets ();
 
             void update_facing_position ();
 
-            /**
-             * Comprueba las colisiones de la bola con el escenario y con los players.
-             */
             void check_asteroid_collision ();
 
-            /**
-             * Dibuja la textura con el mensaje de carga mientras el estado de la escena es LOADING.
-             * La textura con el mensaje se carga la primera para mostrar el mensaje cuanto antes.
-             * @param canvas Referencia al Canvas con el que dibujar la textura.
-             */
             void render_loading (Canvas & canvas);
 
-            /**
-             * Dibuja la escena de juego cuando el estado de la escena es RUNNING.
-             * @param canvas Referencia al Canvas con el que dibujar.
-             */
             void render_playfield (Canvas & canvas);
-
         };
-
     }
 
 #endif
