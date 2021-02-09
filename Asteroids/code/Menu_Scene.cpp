@@ -1,15 +1,16 @@
 /*
  * MENU SCENE
- * Copyright © 2018+ Ángel Rodríguez Ballesteros
+ * Copyright © 2021+ Marcelo López de lErma
  *
  * Distributed under the Boost Software License, version  1.0
  * See documents/LICENSE.TXT or www.boost.org/LICENSE_1_0.txt
  *
- * angel.rodriguez@esne.edu
+ * marcelolopezdelerma@gmail.com
  */
 
 #include "Menu_Scene.hpp"
 #include "Game_Scene.hpp"
+#include "Help_Scene.hpp"
 #include <basics/Canvas>
 #include <basics/Director>
 #include <basics/Transformation>
@@ -67,6 +68,10 @@ namespace example
                     {
                         director.run_scene (shared_ptr< Scene >(new Game_Scene));
                     }
+                    else if (option_at (touch_location) == HELP)
+                    {
+                        //director.run_scene (shared_ptr< Scene >(new Help_Scene));
+                    }
 
                     break;
                 }
@@ -117,7 +122,7 @@ namespace example
                         (
                             scale_then_translate_2d
                             (
-                                  option.is_pressed ? 0.75f : 1.f,
+                                  option.is_pressed ? 1.f : 0.85f,
                                 { option.position[0], option.position[1] }
                             )
                         );
