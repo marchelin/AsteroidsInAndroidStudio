@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name='Basics Project Template'
+rootProject.name='Basics Pong Example'

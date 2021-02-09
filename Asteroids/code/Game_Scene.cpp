@@ -1,7 +1,11 @@
 /*
  * GAME SCENE
- * Copyright � 2021+ Marcelo L�pez de Lerma
- * marcelolopezdelerma@gmail.com
+ * Copyright © 2018+ Ángel Rodríguez Ballesteros
+ *
+ * Distributed under the Boost Software License, version  1.0
+ * See documents/LICENSE.TXT or www.boost.org/LICENSE_1_0.txt
+ *
+ * angel.rodriguez@esne.edu
  */
 
 #include "Game_Scene.hpp"
@@ -9,7 +13,6 @@
 #include <cstdlib>
 #include <basics/Canvas>
 #include <basics/Director>
-#include <math.h>
 
 using namespace basics;
 using namespace std;
@@ -18,18 +21,19 @@ namespace example
 {
     Game_Scene::Texture_Data Game_Scene::textures_data[] =
     {
-        { ID(loading),        "game-scene/loading.png"               },
-        { ID(background),     "game-scene/background.png"            },
-        { ID(top_border),     "game-scene/top_border.png"            },
-        { ID(bottom_border),  "game-scene/bottom_border.png"         },
-        { ID(right_border),   "game-scene/right_border.png"          },
-        { ID(left_border),    "game-scene/left_border.png"           },
-        { ID(Handle_Outline), "game-scene/Handles/Red_Button.png"    },
-        { ID(Handle_Ridged),  "game-scene/Handles/Handle_Ridged.png" },
-        { ID(Red_Button),     "game-scene/Handles/Handle_Outline.png"},
-        { ID(asteroid),       "game-scene/asteroid.png"              },
-        { ID(ship),           "game-scene/ship.png"                  },
-        { ID(bullet),         "game-scene/bullet.png"                },
+        { ID(loading),    "game-scene/loading_bar.png"         },
+        { ID(background), "game-scene/background.png"          },
+        { ID(h_bar),      "game-scene/borders/h_bar.png"       },
+        { ID(v_bar),      "game-scene/borders/v_bar.png"       },
+        { ID(r_arrow),    "game-scene/up_arrow.png"            },
+        { ID(l_arrow),    "game-scene/up_arrow.png"            },
+        { ID(up_arrow),   "game-scene/up_arrow.png"            },
+        { ID(Red_Button), "game-scene/joysticks/red_button.png"},
+        { ID(asteroid),   "game-scene/asteroid.png"            },
+        { ID(mini_asteroid),   "game-scene/mini_asteroid.png"            },
+        { ID(ship),       "game-scene/ship.png"                },
+        { ID(bullet),     "game-scene/bullet.png"              },
+        { ID(blue),       "game-scene/blue.png"                },
     };
 
     unsigned Game_Scene::textures_count = sizeof(textures_data) / sizeof(Texture_Data);
@@ -37,7 +41,6 @@ namespace example
     constexpr float Game_Scene:: asteroid_speed;
     constexpr float Game_Scene::     ship_speed;
     constexpr float Game_Scene::   bullet_speed;
-    constexpr float Game_Scene::   Red_Button_speed;
 
     Game_Scene::Game_Scene()
     {
@@ -79,16 +82,14 @@ namespace example
             else switch (event.id)
             {
                 case ID(touch-started):
-                {
-                    screen_touched = true;
-                    break;
-                }
                 case ID(touch-moved):
                 {
                     finger_position_x = *event[ID(x)].as< var::Float > ();
                     finger_position_y = *event[ID(y)].as< var::Float > ();
+                    screen_touched = true;
                     break;
                 }
+
                 case ID(touch-ended):
                 {
                     screen_touched = false;
@@ -116,7 +117,7 @@ namespace example
 
             if (!canvas)
             {
-                canvas = Canvas::create (ID(canvas), context, {{ canvas_width, canvas_height }});
+                 canvas = Canvas::create (ID(canvas), context, {{ canvas_width, canvas_height }});
             }
 
             if (canvas)
@@ -148,7 +149,10 @@ namespace example
                 {
                     context->add (texture);
                 }
-
+                else
+                {
+                    state = ERROR;
+                }
             }
         }
         else if (timer.get_elapsed_seconds () > 1.f)
@@ -162,80 +166,100 @@ namespace example
 
     void Game_Scene::create_sprites ()
     {
-        //float handle_outline_position_x = Handle_Outline->get_position_x ();
-        //float handle_outline_position_y = Handle_Outline->get_position_y ();
-        //Handle_Ridged->set_position ({ handle_outline_position_x, handle_outline_position_y });
+        Sprite_Handle    background(new Sprite( textures[ID     (background)].get () ));
+        Sprite_Handle            top_bar(new Sprite( textures[ID     (h_bar)].get () ));
+        Sprite_Handle         bottom_bar(new Sprite( textures[ID     (h_bar)].get () ));
+        Sprite_Handle          right_bar(new Sprite( textures[ID     (v_bar)].get () ));
+        Sprite_Handle           left_bar(new Sprite( textures[ID     (v_bar)].get () ));
+        Sprite_Handle            r_arrow(new Sprite( textures[ID   (r_arrow)].get () ));
+        Sprite_Handle            l_arrow(new Sprite( textures[ID   (l_arrow)].get () ));
+        Sprite_Handle           up_arrow(new Sprite( textures[ID  (up_arrow)].get () ));
+        Sprite_Handle         red_button(new Sprite( textures[ID(Red_Button)].get () ));
+        Sprite_Handle    asteroid_handle(new Sprite( textures[ID  (asteroid)].get () ));
+        Sprite_Handle              ship_handle(new Sprite( textures[ID(ship)].get () ));
+        Sprite_Handle          bullet_handle(new Sprite( textures[ID(bullet)].get () ));
 
-        Sprite_Handle    background(new Sprite( textures[ID(background)].get () ));
-        Sprite_Handle    top_bar(new Sprite( textures[ID(top_border)].get () ));
-        Sprite_Handle bottom_bar(new Sprite( textures[ID(bottom_border)].get () ));
-        Sprite_Handle    right_bar(new Sprite( textures[ID(right_border)].get () ));
-        Sprite_Handle left_bar(new Sprite( textures[ID(left_border)].get () ));
-        Sprite_Handle handle_outline(new Sprite( textures[ID(Handle_Outline)].get () ));
-        Sprite_Handle    handle_ridged(new Sprite( textures[ID(Handle_Ridged)].get () ));
-        Sprite_Handle red_button(new Sprite( textures[ID(Red_Button)].get () ));
+        Sprite_Handle              blue_handle_4(new Sprite( textures[ID(blue)].get () ));
+        Sprite_Handle              blue_handle_3(new Sprite( textures[ID(blue)].get () ));
+        Sprite_Handle              blue_handle_2(new Sprite( textures[ID(blue)].get () ));
+        Sprite_Handle              blue_handle_1(new Sprite( textures[ID(blue)].get () ));
 
-        background->set_anchor   (CENTER);
-        background->set_position ({ canvas_width / 2.f, canvas_height / 2.f });
-        top_bar->set_anchor   (CENTER);
-        top_bar->set_position ({ canvas_width / 2.f, canvas_height / 2.f });
-        bottom_bar->set_anchor   (CENTER);
-        bottom_bar->set_position ({ canvas_width / 2.f, canvas_height / 2.f });
-        right_bar->set_anchor   (CENTER);
-        right_bar->set_position ({ canvas_width / 2.f, canvas_height / 2.f });
-        left_bar->set_anchor   (CENTER);
-        left_bar->set_position ({ canvas_width / 2.f, canvas_height / 2.f });
-        handle_outline->set_anchor   (BOTTOM | RIGHT);
-        handle_outline->set_position ({ 1250, 30 });
-        handle_ridged->set_anchor   (BOTTOM | RIGHT);
-        handle_ridged->set_position ({ 30, 30 });
-        red_button->set_anchor   (BOTTOM | LEFT);
-        red_button->set_position ({ 30, 30 });
+        background->set_anchor                                                             (CENTER);
+        background->set_position                         ({ canvas_width / 2, canvas_height / 2 });
+        top_bar->set_anchor                                                          (CENTER | TOP);
+        top_bar->set_position                                ({ canvas_width / 2, canvas_height });
+        bottom_bar->set_anchor                                                    (CENTER | BOTTOM);
+        bottom_bar->set_position                                         ({ canvas_width / 2, 0 });
+        right_bar->set_anchor                                                      (CENTER | RIGHT);
+        right_bar->set_position                              ({ canvas_width, canvas_height / 2 });
+        left_bar->set_anchor                                                        (CENTER | LEFT);
+        left_bar->set_position                                          ({ 0, canvas_height / 2 });
+        r_arrow->set_anchor                                                         (BOTTOM | LEFT);
+        r_arrow->set_position                                                         ({ 30, 30 });
+        l_arrow->set_anchor                                                         (BOTTOM | LEFT);
+        l_arrow->set_position                                                        ({ 200, 30 });
+        up_arrow->set_anchor                                                       (BOTTOM | RIGHT);
+        up_arrow->set_position                                                      ({ 1000, 30 });
+        red_button->set_anchor                                                     (BOTTOM | RIGHT);
+        red_button->set_position                                                     ({ 1250, 30 });
 
-        sprites.push_back (   background);
-        sprites.push_back (   top_bar);
-        sprites.push_back (bottom_bar);
-        sprites.push_back (   right_bar);
-        sprites.push_back (left_bar);
-        sprites.push_back (handle_outline);
-        sprites.push_back (handle_ridged);
-        sprites.push_back (red_button);
+        sprites.push_back      (background);
+        sprites.push_back         (top_bar);
+        sprites.push_back      (bottom_bar);
+        sprites.push_back       (right_bar);
+        sprites.push_back        (left_bar);
+        sprites.push_back         (r_arrow);
+        sprites.push_back         (l_arrow);
+        sprites.push_back        (up_arrow);
+        sprites.push_back      (red_button);
+        sprites.push_back (asteroid_handle);
+        sprites.push_back     (ship_handle);
+        sprites.push_back   (bullet_handle);
+        sprites.push_back   (blue_handle_4);
+        sprites.push_back   (blue_handle_3);
+        sprites.push_back   (blue_handle_2);
+        sprites.push_back   (blue_handle_1);
 
-        bg_image   =             background.get ();
-        top_border    =             top_bar.get ();
-        bottom_border =          bottom_bar.get ();
-        right_border    =             right_bar.get ();
-        left_border =          left_bar.get ();
-        Handle_Outline =          handle_outline.get ();
-        Handle_Ridged =          handle_ridged.get ();
-        Red_Button =          red_button.get ();
-
-        Sprite_Handle         bullet_handle(new Sprite( textures[ID(bullet)].get () ));
-        Sprite_Handle  ship_handle(new Sprite( textures[ID(ship)].get () ));
-        Sprite_Handle         asteroid_handle(new Sprite( textures[ID(asteroid)].get () ));
-
-        sprites.push_back ( bullet_handle);
-        sprites.push_back ( ship_handle);
-        sprites.push_back ( asteroid_handle);
-
-        bullet = bullet_handle.get ();
-        ship     =     ship_handle.get ();
-        asteroid = asteroid_handle.get ();
+        top_border    =      background.get ();
+        top_border    =         top_bar.get ();
+        bottom_border =      bottom_bar.get ();
+        right_border  =       right_bar.get ();
+        left_border   =        left_bar.get ();
+        right_arrow   =         r_arrow.get ();
+        left_arrow    =         l_arrow.get ();
+        Uparrow       =        up_arrow.get ();
+        r_button      =      red_button.get ();
+        asteroid      = asteroid_handle.get ();
+        ship          =     ship_handle.get ();
+        bullet        =   bullet_handle.get ();
+        blue_4        =   blue_handle_4.get ();
+        blue_3        =   blue_handle_3.get ();
+        blue_2        =   blue_handle_2.get ();
+        blue_1        =   blue_handle_1.get ();
     }
 
     void Game_Scene::restart_game()
     {
-        ship->set_position ({ canvas_width / 2.f, canvas_height / 2.f });
-        ship->set_speed    ({ 0.f, 0.f });
+        blue_4->set_position ({ canvas_width - (r_button->get_height() / 2) - 27,  (r_button->get_width() / 2) + 27 });
+        blue_3->set_position  ({ canvas_width - (Uparrow->get_height() / 2) - 280, (Uparrow->get_width() / 2) + 35 });
+        blue_2->set_position  ({ canvas_width - (right_arrow->get_height() / 2) - 880, (right_arrow->get_width() / 2) + 35 });
+        blue_1->set_position  ({ canvas_width - (left_arrow->get_height() / 2) - 1050, (left_arrow->get_width() / 2) + 35 });
 
-        asteroid->set_position ({ 100, 100});
-        asteroid->set_speed    ({ 0.1f, 0.1f });
+        ship->set_position ({ canvas_width - (canvas_width / 4.f), canvas_height / 2 });
+
+        bullet->set_position ({ -100 , 0  });
+
+        asteroid->set_position ({ canvas_width / 4.f, canvas_height / 2.f });
+        asteroid->set_speed    ({ 0.f, 0.f });
+
+        screen_touched = false;
 
         gameplay = WAITING_TO_START;
     }
 
     void Game_Scene::start_playing ()
     {
+        /*
         Vector2f random_direction
         (
             float(rand () % int(canvas_width ) - int(canvas_width  / 2)),
@@ -243,6 +267,10 @@ namespace example
         );
 
         asteroid->set_speed (random_direction.normalized () * asteroid_speed);
+         */
+
+        ship->set_speed_x(-200);
+        ship->set_speed_y( 50);
 
         gameplay = PLAYING;
     }
@@ -254,164 +282,206 @@ namespace example
             sprite->update (time);
         }
 
-        update_user ();
-        //check_asteroid_collision ();
+        //update_movement_button ();
+        update_red_button ();
+        check_ship_collisions ();
+        check_bullet_collisions ();
+        //check_asteroid_collisions ();
     }
 
-    float delta_x;
-    float delta_y;
-
-    void Game_Scene::update_user ()
+    void Game_Scene::update_movement_button ()
     {
-        delta_x = finger_position_x - (Red_Button->get_position_x ());
-        delta_y = finger_position_y - (Red_Button->get_position_y ());
+        //float angleInDegrees;
+
+        float thrust_x;
+        float thrust_y;
+
+        //ship->set_speed_x (+thrust_x);
+
+        //ship->set_speed_y (+gravity);
+
+
+        float RotateAngle = 360;
+        float RadiansRotate = (RotateAngle * 3.14159265359f) / 180;
+
+        delta_x_mov_button = finger_position_x - (canvas_width - (Uparrow->get_height() / 2) - 280);
+        delta_y_mov_button = finger_position_y - ((Uparrow->get_width() / 2) + 35);
+
+        delta_x_r_button = finger_position_x - (canvas_width - (right_arrow->get_height() / 2) - 880);
+        delta_y_r_button = finger_position_y - ((right_arrow->get_width() / 2) + 35);
+
+        delta_x_l_button = finger_position_x - (canvas_width - (left_arrow->get_height() / 2) - 1050);
+        delta_y_l_button = finger_position_y - ((left_arrow->get_width() / 2) + 35);
 
         if(screen_touched == true)
         {
-            if ((abs(delta_x) < 100) && (abs(delta_y) < 100))
+            if ((abs(delta_x_mov_button) < 50) && (abs(delta_y_mov_button) < 50))
             {
-                if (delta_x < 0.f)
-                {
-                    //X_position = asteroid->get_position_x ();
-                    Red_Button->set_speed_x (-Red_Button_speed);
-                }
-                else if (delta_x > 0.f)
-                {
-                    //X_position = asteroid->get_position_x ();
-                    Red_Button->set_speed_x (+Red_Button_speed);
-                }
+                //ship->set_speed_y (+ship_speed);
 
-                if (delta_y < 0.f)
-                {
-                    //Y_position = asteroid->get_position_y ();
-                    Red_Button->set_speed_y (-Red_Button_speed);
-                }
-                else if (delta_y > 0.f)
-                {
-                    //Y_position = asteroid->get_position_y ();
-                    Red_Button->set_speed_y (+Red_Button_speed);
-                }
+                //thrust_x = ship_speed * cos (ship->get_width() - (ship->get_width() / 2) - (ship_angle_right));
+                //thrust_y = thrust_power * cos (ship_angle_left);
+
+                //ship->set_speed_x (+thrust_x);
+
+                //ship->set_speed_y (+gravity);
+
+                //ship_angle_right -= rotation_speed;
+
+
+                //int vector_x = ship->get_width() - (ship->get_width() / 2);
+                //int vector_y = ship->get_height() - (ship->get_height() / 2);
+
+                //Vector2f ship_direction ( vector_x, vector_y );
+
+                //ship->set_speed (ship_direction.normalized () * ship_speed);
+
+
+                //asteroid->set_position_y(ship->get_width() * cos(RadiansRotate));
+
+
+
+
+                /*
+                int x_toDouble = pow((double)vector_x, 2); //type casting from int to double
+                int y_toDouble = pow((double)vector_y, 2);
+
+                int d = abs( sqrt( (double)x_toDouble + (double)y_toDouble ) );
+
+                int angleInRadian = atan2((double)vector_x,(double)vector_y); //angle in radian
+                int angleInDegree = angleInRadian * 180 / 3.14159f; //angle in degree
+                 */
             }
-            else
+
+            if ((abs(delta_x_r_button) < 50) && (abs(delta_y_r_button) < 50))
             {
-                Red_Button->set_speed_x (0.f);
-                Red_Button->set_speed_y (0.f);
+                //ship->set_speed_x (+ship_speed);
+                ship_angle_right -= rotation_speed;
+
+                //ship->get_position() = ship->get_position() - ship->get_width() * cos(RadiansRotate) + ship->get_height() * sin(RadiansRotate);
+            }
+
+            if ((abs(delta_x_l_button) < 50) && (abs(delta_y_l_button) < 50))
+            {
+                //ship->set_speed_x (-ship_speed);
+                ship_angle_left += rotation_speed;
             }
         }
-        else if(screen_touched == false)
+        else
         {
-            Red_Button->set_speed_x (0.f);
-            Red_Button->set_speed_y (0.f);
+            ship->set_speed_x (0.f);
+            ship->set_speed_y (0.f);
         }
     }
 
-    void Game_Scene::sapwn_bullets ()
+    void Game_Scene::update_red_button ()
     {
-        float ship_position_x = ship->get_position_x ();
-        float ship_position_y = ship->get_position_y ();
+        delta_x_red_button = finger_position_x - (canvas_width - (r_button->get_height() / 2) - 27);
+        delta_y_red_button = finger_position_y - ((r_button->get_width() / 2) + 27);
 
-        bullet->set_position ({ ship_position_x, ship_position_y }); //donde spawnea
-        bullet->set_speed    ({ 1.f, 1.f });
+        if(screen_touched == true)
+        {
+            if ((abs(delta_x_red_button) < 50) && (abs(delta_y_red_button) < 50))
+            {
+                //ship->set_speed_y (-ship_speed);
 
-        //bullet->set_position ({ finger_position_x, finger_position_y }); //posicion si dispara
-        //bullet->set_speed    ({ 0.5f, 0.5f });
+                bullet->set_position ({ ship->get_position_x (), ship->get_position_y () }); //donde spawnea
+                bullet->set_speed    ({ bullet_speed, 0.f });
+            }
+        }
     }
 
-    /*
-    void Game_Scene::update_facing_position ()
+    void Game_Scene::check_ship_collisions ()
     {
-        float pi = 3.14159f;
-
-        float FaceAngle = atan2(delta_x, delta_y) * 180;
-        FaceAngle = FaceAngle / pi;
-    }
-     */
-
-    void Game_Scene::check_asteroid_collision ()
-    {
-        bool colisionaConDerecho = false;
-
-        bool touchedX;
-        bool touchedNegX;
-
-
-        //float LeftBorderPosition = ship->get_position_y () - (left_border->get_position_x ()); Borrar
-
-        if (ship->get_position_y () < canvas_height- 600)
+        if (ship->intersects (*top_border))
         {
-            ship->set_speed_y    ((-ship->get_speed_y ()));
+            ship->set_position_y (bottom_border->get_top_y() + 40);
         }
-        if (ship->get_position_y () > canvas_height- 50)
+        else if (ship->intersects (*bottom_border))
         {
-            ship->set_speed_y    ((+ship->get_speed_y ()));
-        }
-        /*
-        if(ship->get_position_x () < canvas_width - left_border->get_width()) //Left
-        {
-            //dvd->set_position_x (left_border->get_right_x () + dvd->get_width() / 2.f);
-            ship->set_speed_x    (+ship->get_speed_x ());
-        }
-        */
-        if (ship->get_position_x () < canvas_width - 100) //Right 100%
-        {
-            ship->set_speed_x    (+ship->get_speed_x ());
-        }
-        /*
-        if (asteroid->get_position_y () < canvas_height- 50)
-        {
-            //dvd->set_position_y (top_border->get_bottom_y () - dvd->get_height() / 2.f);
-            asteroid->set_speed_y (+100.f);
-        }
-
-        if (asteroid->get_position_y () > 50)
-        {
-            //dvd->set_position_y (bottom_border->get_top_y () + dvd->get_height() / 2.f);
-            asteroid->set_speed_y    (-50.f);
-        }
-
-        if(asteroid->get_position_x () < right_border->get_position_x())
-        {
-            //dvd->set_position_x (right_border->get_left_x () + dvd->get_width() / 2.f);
-            asteroid->set_speed_x    (+100.f);
-        }
-        if(asteroid->get_position_x () > left_border->get_position_x())
-        {
-            //dvd->set_position_x (left_border->get_right_x () + dvd->get_width() / 2.f);
-            asteroid->set_speed_x    (-100.f);
-        }
-         */
-
-        /*
-        if (asteroid->intersects (*ship))
-        {
-            restart_game();
-        }
-        if (asteroid->intersects (*bullet))
-        {
-            restart_game();
+            ship->set_position_y (top_border->get_bottom_y () - 40);
         }
 
         if (ship->intersects (*right_border))
         {
-            ship->set_position_y (right_border->get_top_y () + ship->get_height() / 2.f);
+            ship->set_position_x (left_border->get_right_x() + 40);
+        }
+        else if (ship->intersects (*left_border))
+        {
+            ship->set_position_x (right_border->get_left_x() - 40);
+        }
+    }
+
+    void Game_Scene::check_bullet_collisions ()
+    {
+        if (bullet->intersects (*ship))
+        {
+            //spawn_mini_asteroids();
+        }
+
+        if (bullet->intersects (*top_border))
+        {
+            bullet->set_position_y (bottom_border->get_top_y() + 40);
+        }
+        else if (bullet->intersects (*bottom_border))
+        {
+            bullet->set_position_y (top_border->get_bottom_y () - 40);
+        }
+
+        if (bullet->intersects (*right_border))
+        {
+            bullet->set_position_x (left_border->get_right_x() + 40);
+        }
+        else if (bullet->intersects (*left_border))
+        {
+            bullet->set_position_x (right_border->get_left_x() - 40);
+        }
+    }
+
+    void Game_Scene::check_asteroid_collisions ()
+    {
+        if (asteroid->intersects (*ship))
+        {
+            restart_game();
         }
 
         if (asteroid->intersects (*top_border))
         {
-            asteroid->set_position_y (top_border->get_top_y () + asteroid->get_height() / 2.f);
+            asteroid->set_position_y (bottom_border->get_top_y() + 20);
         }
-        if (asteroid->intersects (*bottom_border))
+        else if (asteroid->intersects (*bottom_border))
         {
-            asteroid->set_position_y (bottom_border->get_bottom_y () - asteroid->get_height() / 2.f);
+            asteroid->set_position_y (top_border->get_bottom_y () - 20);
         }
+
         if (asteroid->intersects (*right_border))
         {
-            asteroid->set_position_x (right_border->get_left_x () + asteroid->get_width() / 2.f);
+            asteroid->set_position_x (left_border->get_right_x() + 20);
         }
-        if (asteroid->intersects (*left_border))
+        else if (asteroid->intersects (*left_border))
         {
-            asteroid->set_position_x (left_border->get_right_x () - asteroid->get_width() / 2.f);
+            asteroid->set_position_x (right_border->get_left_x() - 20);
         }
+    }
+
+    void Game_Scene::spawn_mini_asteroids ()
+    {
+        /*
+        int ast_width = rand () % int(asteroid->get_width() / 2);
+        int ast_height = rand () % int(asteroid->get_width() / 2);
+
+        Sprite_Handle          mini_asteroid(new Sprite( textures[ID(mini_asteroid)].get () ));
+
+        mini_asteroid->set_position ({  asteroid->get_position_x (), asteroid->get_position_y () });
+
+        Vector2f ast_direction (float(rand () % int(ast_width)), float(rand () % int(ast_height)));
+
+        mini_asteroid->set_speed (ast_direction.normalized () * asteroid_speed);
+
+        mini_asteroid->set_speed    ({ 0.f, 0.f });
+
+        bullet->set_position ({ ship->get_position_x (), ship->get_position_y () }); //donde spawnea
+        bullet->set_speed    ({ 100.f, 0.f });
          */
     }
 

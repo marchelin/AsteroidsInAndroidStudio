@@ -1,7 +1,11 @@
 /*
  * GAME SCENE
- * Copyright � 2021+ Marcelo L�pez de Lerma
- * marcelolopezdelerma@gmail.com
+ * Copyright © 2018+ Ángel Rodríguez Ballesteros
+ *
+ * Distributed under the Boost Software License, version  1.0
+ * See documents/LICENSE.TXT or www.boost.org/LICENSE_1_0.txt
+ *
+ * angel.rodriguez@esne.edu
  */
 
 #ifndef GAME_SCENE_HEADER
@@ -21,6 +25,7 @@
 
     namespace example
     {
+
         using basics::Id;
         using basics::Timer;
         using basics::Canvas;
@@ -46,6 +51,7 @@
                 UNINITIALIZED,
                 WAITING_TO_START,
                 PLAYING,
+                BALL_LEAVING,
             };
 
         private:
@@ -56,48 +62,61 @@
 
         private:
 
-            static constexpr float   bullet_speed = 400.f;
-            static constexpr float   asteroid_speed = 300.f;
-            static constexpr float   ship_speed = 2000.f;
-            static constexpr float   Red_Button_speed = 2000.f;
+            static constexpr float asteroid_speed =  200.f;
+            static constexpr float     ship_speed =  500.f;
+            static constexpr float     bullet_speed = 1000.f;
 
-            struct Touch
-            {
-                int32_t id;
-            };
+            static constexpr float     gravity = 20.f;
+            static constexpr float     rotation_speed = 10.f;
+            static constexpr float     thrust_power = 100.f;
 
         private:
 
-            State          state;
-            Gameplay_State gameplay;
+            State              state;
+            Gameplay_State  gameplay;
             bool           suspended;
 
-            unsigned       canvas_width;
+            unsigned        canvas_width;
             unsigned       canvas_height;
 
             Texture_Map    textures;
-            Sprite_List    sprites;
+            Sprite_List     sprites;
 
-            Sprite       * bg_image;
-            Sprite       * top_border;
+            Sprite       *    background;
+            Sprite       *    top_border;
             Sprite       * bottom_border;
-            Sprite       * right_border;
-            Sprite       * left_border;
-            Sprite       * Handle_Outline;
-            Sprite       * Handle_Ridged;
-            Sprite       * Red_Button;
-            Sprite       * ship;
-            Sprite       * asteroid;
-            Sprite       * bullet;
+            Sprite       *   left_border;
+            Sprite       *  right_border;
+            Sprite       *      asteroid;
+            Sprite       *   right_arrow;
+            Sprite       *    left_arrow;
+            Sprite       *       Uparrow;
+            Sprite       *      r_button;
+            Sprite       *          ship;
+            Sprite       *        bullet;
+            Sprite       *        blue_4;
+            Sprite       *        blue_3;
+            Sprite       *        blue_2;
+            Sprite       *        blue_1;
 
-            bool           Start_redButton;
-            bool           screen_touched;
-            float          finger_position_x;
-            float          finger_position_y;
+            bool screen_touched_mov;
+            bool     screen_touched;
+            float finger_position_x;
+            float finger_position_y;
+
+            float ship_angle_right;
+            float  ship_angle_left;
+
+            float delta_x_red_button;
+            float delta_y_red_button;
+            float delta_x_mov_button;
+            float delta_y_mov_button;
+            float   delta_x_r_button;
+            float   delta_y_r_button;
+            float   delta_x_l_button;
+            float   delta_y_l_button;
 
             Timer          timer;
-
-            Touch    touches[10];
 
         public:
 
@@ -132,13 +151,17 @@
 
             void run_simulation (float time);
 
-            void update_user ();
+            void update_movement_button ();
 
-            void sapwn_bullets ();
+            void update_red_button ();
 
-            void update_facing_position ();
+            void check_ship_collisions ();
 
-            void check_asteroid_collision ();
+            void check_bullet_collisions ();
+
+            void check_asteroid_collisions ();
+
+            void spawn_mini_asteroids ();
 
             void render_loading (Canvas & canvas);
 
