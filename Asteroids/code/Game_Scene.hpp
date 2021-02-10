@@ -76,9 +76,10 @@
 
         private:
 
-            static constexpr float asteroid_speed =  200.f;        ///< Velocidad a la que se mueven los asteroides (en unideades virtuales por segundo).
-            static constexpr float     ship_speed =  500.f;        ///< Velocidad a la que se mueve la nave (en unideades virtuales por segundo).
-            static constexpr float   bullet_speed = 1000.f;        ///< Velocidad a la que se mueve la bala (en unideades virtuales por segundo).
+            static constexpr float asteroid_speed_1 =  200.f;      ///< Velocidad a la que se mueve el asteroide_1 (en unideades virtuales por segundo).
+            static constexpr float asteroid_speed_2 =  100.f;      ///< Velocidad a la que se mueve el asteroide_2 (en unideades virtuales por segundo).
+            static constexpr float     ship_speed   =  500.f;      ///< Velocidad a la que se mueve la nave (en unideades virtuales por segundo).
+            static constexpr float   bullet_speed   = 2000.f;      ///< Velocidad a la que se mueve la bala (en unideades virtuales por segundo).
 
             static constexpr float     gravity = 20.f;
             static constexpr float     rotation_speed = 10.f;
@@ -101,7 +102,8 @@
             Sprite       * bottom_border;                       ///< Puntero al sprite de la lista de sprites que representa el borde inferior.
             Sprite       *   left_border;                       ///< Puntero al sprite de la lista de sprites que representa el borde izquierdo.
             Sprite       *  right_border;                       ///< Puntero al sprite de la lista de sprites que representa el borde derecho.
-            Sprite       *      asteroid;                       ///< Puntero al sprite de la lista de sprites que representa el asteroide.
+            Sprite       *    asteroid_1;                       ///< Puntero al sprite de la lista de sprites que representa el asteroide_1.
+            Sprite       *    asteroid_2;                       ///< Puntero al sprite de la lista de sprites que representa el asteroide_1.
             Sprite       *   right_arrow;                       ///< Puntero al sprite de la lista de sprites que representa el botón de girar derecha.
             Sprite       *    left_arrow;                       ///< Puntero al sprite de la lista de sprites que representa el botón de girar izquierda.
             Sprite       *       Uparrow;                       ///< Puntero al sprite de la lista de sprites que representa el botón de moverse.
@@ -112,13 +114,20 @@
             Sprite       *      h_life_2;                       ///< Puntero al sprite de la lista de sprites que representa la vida nº 2.
             Sprite       *      h_life_3;                       ///< Puntero al sprite de la lista de sprites que representa la vida nº 3.
             Sprite       *     blue_ball;                       ///< Puntero al sprite de la lista de sprites que representa la bala.
+            Sprite       *     yellow_ball;                       ///< Puntero al sprite de la lista de sprites que representa la bala.
 
             Sprite       *        p_icon;                       ///< Puntero al sprite de la lista de sprites que representa el icono de pausa.
             Sprite       *        p_menu;                       ///< Puntero al sprite de la lista de sprites que representa fondo del menú de pausa.
             Sprite       *    res_button;                       ///< Puntero al sprite de la lista de sprites que representa el botón de resume.
             Sprite       *    ext_button;                       ///< Puntero al sprite de la lista de sprites que representa el botón de exit.
 
-            int   vidas = 3;                                    ///< Número de vidas de jugador inicialmente.
+            int               vidas = 3;                        ///< Número de vidas de jugador inicialmente.
+            bool    ast_ColisionaUnaVez = false;                ///< false hasta que el asteroide no colisione 1 vez con la nave.
+            bool  ast_ColisionaDosVeces = false;                ///< false hasta que el asteroide no colisione 2 vez con la nave.
+            bool ast_ColisionaTresVeces = false;                ///< false hasta que el asteroide no colisione 3 vez con la nave.
+            bool        ast_Seguridad_1 = false;                ///< nivel de seguridad 1 es false hasta que no se reinicie el juego.
+            bool        ast_Seguridad_2 = false;                ///< nivel de seguridad 2 es false hasta que no se reinicie el juego.
+            bool        ast_Seguridad_3 = false;                ///< nivel de seguridad 3 es false hasta que no se reinicie el juego.
 
             bool   screen_touched_mov;                          ///< true si el usuario está tocando mientras se mueve por la pantalla.
             bool       screen_touched;                          ///< true si el usuario está tocando la pantalla.
@@ -128,20 +137,24 @@
             float ship_angle_right;                             ///< Ángulo de giro hacia la derecha de la nave.
             float  ship_angle_left;                             ///< Ángulo de giro hacia la izquierda de la nave.
 
-            float delta_x_pause_icon;                           ///< Distancia entre el dedo del usuario y la posición X del icono de pausa.
-            float delta_y_pause_icon;                           ///< Distancia entre el dedo del usuario y la posición Y del icono de pausa.
-            float delta_x_res_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de resume.
-            float delta_y_res_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de resume.
-            float delta_x_ext_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de exit.
-            float delta_y_ext_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de exit.
-            float delta_x_red_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón rojo.
-            float delta_y_red_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón rojo.
-            float delta_x_mov_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de moverse.
-            float delta_y_mov_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de moverse.
-            float   delta_x_r_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de girar derecha.
-            float   delta_y_r_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de girar derecha.
-            float   delta_x_l_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de girar izquierda.
-            float   delta_y_l_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de girar izquierda.
+            float  vector_x_point_ref;                           ///< Vector x desde el punto de referencia (100, 0).
+            float  vector_y_point_ref;                           ///< Vector x desde el punto de referencia (100, 0).
+            float delta_x_ship_vector;                           ///< Distancia entre la punta de la nave y la base en el eje X.
+            float delta_y_ship_vector;                           ///< Distancia entre la punta de la nave y la base en el eje Y.
+            float  delta_x_pause_icon;                           ///< Distancia entre el dedo del usuario y la posición X del icono de pausa.
+            float  delta_y_pause_icon;                           ///< Distancia entre el dedo del usuario y la posición Y del icono de pausa.
+            float  delta_x_res_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de resume.
+            float  delta_y_res_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de resume.
+            float  delta_x_ext_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de exit.
+            float  delta_y_ext_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de exit.
+            float  delta_x_red_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón rojo.
+            float  delta_y_red_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón rojo.
+            float  delta_x_mov_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de moverse.
+            float  delta_y_mov_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de moverse.
+            float    delta_x_r_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de girar derecha.
+            float    delta_y_r_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de girar derecha.
+            float    delta_x_l_button;                           ///< Distancia entre el dedo del usuario y la posición X del botón de girar izquierda.
+            float    delta_y_l_button;                           ///< Distancia entre el dedo del usuario y la posición Y del botón de girar izquierda.
 
             Timer          timer;                               ///< Cronómetro usado para medir intervalos de tiempo
 
@@ -238,6 +251,11 @@
             void update_movement_button ();
 
             /**
+             * Se calcula el vector forward de la nave.
+             */
+            void update_ship_vector ();
+
+            /**
              * Ejecuta la función de disparar de la nave.
              */
             void update_red_button ();
@@ -256,6 +274,11 @@
              * Comprueba las colisiones del asteroide con el escenario y con la nave.
              */
             void check_asteroid_collisions ();
+
+            /**
+             * Comprueba la nave tiene que perder vidas cuando choca con asteroides.
+             */
+            void check_ship_life ();
 
             /**
              * Se spawnean los pequeños sprites de los asteroids si una bala colisiona previamente.
