@@ -47,6 +47,7 @@
             {
                 LOADING,
                 RUNNING,
+                GAME_PAUSED,
                 ERROR
             };
 
@@ -58,7 +59,7 @@
                 UNINITIALIZED,
                 WAITING_TO_START,
                 PLAYING,
-                BALL_LEAVING,
+                GAME_OVER,
             };
 
         private:
@@ -107,6 +108,9 @@
             Sprite       *      r_button;                       ///< Puntero al sprite de la lista de sprites que representa el botón de disparar.
             Sprite       *          ship;                       ///< Puntero al sprite de la lista de sprites que representa la nave.
             Sprite       *        bullet;                       ///< Puntero al sprite de la lista de sprites que representa la bala.
+            Sprite       *      h_life_1;                       ///< Puntero al sprite de la lista de sprites que representa la vida nº 1.
+            Sprite       *      h_life_2;                       ///< Puntero al sprite de la lista de sprites que representa la vida nº 2.
+            Sprite       *      h_life_3;                       ///< Puntero al sprite de la lista de sprites que representa la vida nº 3.
             Sprite       *     blue_ball;                       ///< Puntero al sprite de la lista de sprites que representa la bala.
 
             Sprite       *        p_icon;                       ///< Puntero al sprite de la lista de sprites que representa el icono de pausa.
@@ -114,7 +118,8 @@
             Sprite       *    res_button;                       ///< Puntero al sprite de la lista de sprites que representa el botón de resume.
             Sprite       *    ext_button;                       ///< Puntero al sprite de la lista de sprites que representa el botón de exit.
 
-            bool pause_menu_is_active = false;                  ///< false si el usuario no está en el menu de pausa.
+            int   vidas = 3;                                    ///< Número de vidas de jugador inicialmente.
+
             bool   screen_touched_mov;                          ///< true si el usuario está tocando mientras se mueve por la pantalla.
             bool       screen_touched;                          ///< true si el usuario está tocando la pantalla.
             float   finger_position_x;                          ///< Coordenada X hacia donde toca la pantalla el usuario.
@@ -228,11 +233,6 @@
             void update_pause_icon ();
 
             /**
-             * Se activan en pantalla el menú de pausa con sus botones.
-             */
-            void spawn_pause_menu ();
-
-            /**
              * Se checkea mediante el input de botones si el usuario quiere moverse.
              */
             void update_movement_button ();
@@ -274,6 +274,12 @@
              * @param canvas Referencia al Canvas con el que dibujar.
              */
             void render_playfield (Canvas & canvas);
+
+            /**
+             * Dibuja la escena del menu de pausa cuando el estado de la escena es GAME_PAUSED.
+             * @param canvas Referencia al Canvas con el que dibujar.
+             */
+            void render_pause_menu ();
         };
     }
 

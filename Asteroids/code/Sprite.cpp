@@ -14,7 +14,10 @@ using namespace basics;
 
 namespace example
 {
-    Sprite::Sprite(Texture_2D * texture) : texture (texture)
+
+    Sprite::Sprite(Texture_2D * texture)
+            :
+            texture (texture)
     {
         anchor   = basics::CENTER;
         size     = { texture->get_width (), texture->get_height () };
@@ -24,20 +27,32 @@ namespace example
         visible  = true;
     }
 
+    // ---------------------------------------------------------------------------------------------
+
     bool Sprite::intersects (const Sprite & other)
     {
+        // Se determinan las coordenadas de la esquina inferior izquierda y de la superior derecha
+        // de este sprite:
+
         float this_left    = this->get_left_x   ();
         float this_bottom  = this->get_bottom_y ();
         float this_right   = this_left   + this->size.width;
         float this_top     = this_bottom + this->size.height;
+
+        // Se determinan las coordenadas de la esquina inferior izquierda y de la superior derecha
+        // del otro sprite:
 
         float other_left   = other.get_left_x   ();
         float other_bottom = other.get_bottom_y ();
         float other_right  = other_left   + other.size.width;
         float other_top    = other_bottom + other.size.height;
 
+        // Se determina si los rectángulos envolventes de ambos sprites se solapan:
+
         return !(other_left >= this_right || other_right <= this_left || other_bottom >= this_top || other_top <= this_bottom);
     }
+
+    // ---------------------------------------------------------------------------------------------
 
     bool Sprite::contains (const Point2f & point)
     {
@@ -65,4 +80,5 @@ namespace example
 
         return false;
     }
+
 }

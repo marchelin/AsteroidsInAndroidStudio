@@ -39,6 +39,10 @@ namespace example
         { ID(ship),         "game-scene/ship.png"                     },
         { ID(bullet),       "game-scene/bullet.png"                   },
 
+        { ID(heart_1),        "game-scene/heart.png"                    },
+        { ID(heart_2),        "game-scene/heart.png"                    },
+        { ID(heart_3),        "game-scene/blue.png"                    },
+
         { ID(pause_icon),   "game-scene/pause_icon.png"               },
         { ID(pause_menu),   "game-scene/pause-menu/pause_menu.png"},
         { ID(resume_button),   "game-scene/pause-menu/resume_button.png"},
@@ -138,14 +142,17 @@ namespace example
 
     void Game_Scene::update (float time)
     {
-        if(pause_menu_is_active == false)
+        if (!suspended) switch (state)
         {
-            if (!suspended) switch (state)
-                {
-                    case LOADING: load_textures  ();     break;
-                    case RUNNING: run_simulation (time); break;
-                    case ERROR:   break;
-                }
+            case LOADING:        load_textures  (); break;
+            case RUNNING:    run_simulation (time); break;
+            case ERROR:   break;
+        }
+
+        if(state == GAME_PAUSED)
+        {
+            //state = RUNNING;
+            //suspended = true;
         }
     }
 
@@ -174,8 +181,8 @@ namespace example
 
                 switch (state)
                 {
-                    case LOADING: render_loading   (*canvas); break;
-                    case RUNNING: render_playfield (*canvas); break;
+                    case LOADING:      render_loading   (*canvas); break;
+                    case RUNNING:      render_playfield (*canvas); break;
                     case ERROR:   break;
                 }
             }
@@ -245,6 +252,9 @@ namespace example
         Sprite_Handle           up_arrow(new Sprite( textures[ID  (up_arrow)].get () ));
         Sprite_Handle         red_button(new Sprite( textures[ID(Red_Button)].get () ));
         Sprite_Handle         pause_icon(new Sprite( textures[ID(pause_icon)].get () ));
+        Sprite_Handle              heart_1(new Sprite( textures[ID (heart_1)].get () ));
+        Sprite_Handle              heart_2(new Sprite( textures[ID (heart_2)].get () ));
+        Sprite_Handle              heart_3(new Sprite( textures[ID (heart_3)].get () ));
 
         background->set_anchor                                                             (CENTER);
         background->set_position                         ({ canvas_width / 2, canvas_height / 2 });
@@ -275,6 +285,9 @@ namespace example
         sprites.push_back        (up_arrow);
         sprites.push_back      (red_button);
         sprites.push_back      (pause_icon);
+        sprites.push_back         (heart_1);
+        sprites.push_back         (heart_2);
+        sprites.push_back         (heart_3);
 
         // Se crea la nave, el asteroide y la bala:
 
@@ -301,6 +314,9 @@ namespace example
         ship          =     ship_handle.get ();
         bullet        =   bullet_handle.get ();
         p_icon        =      pause_icon.get ();
+        h_life_1        =       heart_1.get ();
+        h_life_2        =       heart_2.get ();
+        h_life_3        =       heart_3.get ();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -309,15 +325,19 @@ namespace example
 
     void Game_Scene::restart_game()
     {
-        p_icon->set_position ({ (left_border->get_width())  + 50,
-                           canvas_height  - (top_border->get_height())  - 50 });
+        p_icon->set_position ({ (left_border->get_width())  + 50, canvas_height  - (top_border->get_height())  - 50 });
+
+        h_life_1->set_position ({ right_border->get_position_x() - 50, canvas_height  - (top_border->get_height())  - 50 });
+        h_life_2->set_position ({ right_border->get_position_x() - 100, canvas_height  - (top_border->get_height())  - 50 });
+        h_life_3->set_position ({ right_border->get_position_x() - 150, canvas_height  - (top_border->get_height())  - 50 });
 
         ship->set_position ({ canvas_width - (canvas_width / 4.f), canvas_height / 2 });
+
 
         bullet->set_position ({ -100 , 0  });
 
         asteroid->set_position ({ canvas_width / 4.f, canvas_height / 2.f });
-        asteroid->set_speed    ({ 0.f, 0.f });
+        //asteroid->set_speed    ({ 0.f, 0.f });
 
         screen_touched = false;
 
@@ -330,6 +350,7 @@ namespace example
     {
         // Se genera un vector de dirección al azar:
 
+        /*
         Vector2f random_direction
         (
             float(rand () % int(canvas_width ) - int(canvas_width  / 2)),
@@ -340,6 +361,9 @@ namespace example
         // resultante tenga exactamente esa longitud:
 
         asteroid->set_speed (random_direction.normalized () * asteroid_speed);
+         */
+
+        asteroid->set_speed    ({ 200.f, 0.f });
 
         gameplay = PLAYING;
     }
@@ -355,6 +379,12 @@ namespace example
             sprite->update (time);
         }
 
+        /*
+        if(gameplay == GAME_PAUSED)
+        {
+            render_pause_menu ();
+        }
+         */
         update_pause_icon ();
         update_movement_button ();
         update_red_button ();
@@ -366,6 +396,8 @@ namespace example
         check_asteroid_collisions ();
     }
 
+    // ---------------------------------------------------------------------------------------------
+
     void Game_Scene::update_pause_icon ()
     {
         // Se calcula la posisión entre la posición del dedo el icono de pausa, spawneando así una
@@ -374,61 +406,12 @@ namespace example
         delta_x_pause_icon = finger_position_x - ((left_border->get_width()) + 50);
         delta_y_pause_icon = finger_position_y - ((canvas_height  - (top_border->get_height()) - 50));
 
-        if(screen_touched == true && pause_menu_is_active == false)
+        if(screen_touched == true)
         {
             if ((abs(delta_x_pause_icon) < 50) && (abs(delta_y_pause_icon) < 50))
             {
-                spawn_pause_menu();
-
-                pause_menu_is_active = true;
-            }
-        }
-    }
-
-    void Game_Scene::spawn_pause_menu ()
-    {
-        // Se crean los Sprites necesarios para el menu de pausa:
-
-        Sprite_Handle         pause_menu(new Sprite( textures[ID(pause_menu)].get () ));
-        Sprite_Handle         resume_button(new Sprite( textures[ID(resume_button)].get () ));
-        Sprite_Handle         exit_button(new Sprite( textures[ID(exit_button)].get () ));
-        Sprite_Handle         blue(new Sprite( textures[ID(blue)].get () ));
-
-        sprites.push_back      (pause_menu);
-        sprites.push_back      (resume_button);
-        sprites.push_back      (exit_button);
-        sprites.push_back      (blue);
-
-        p_menu = pause_menu.get ();
-        res_button = resume_button.get ();
-        ext_button = exit_button.get ();
-        blue_ball = blue.get ();
-
-        p_menu->set_position ({ canvas_width / 2, canvas_height  / 2 });
-        res_button->set_position ({ canvas_width / 2, canvas_height  / 2 });
-        ext_button->set_position ({ canvas_width / 2, canvas_height  / 4 });
-        blue_ball->set_position ({ canvas_width / 2, canvas_height  / 4 });
-
-
-        // Se comprueba si el usuario quiere seguir jugando o salir:
-
-        if(screen_touched == true)
-        {
-            delta_x_res_button = finger_position_x - (canvas_width / 2);
-            delta_y_res_button = finger_position_y - (canvas_height  / 2);
-
-            if ((abs(delta_x_res_button) < 200) && (abs(delta_y_res_button) < 90))
-            {
-                pause_menu_is_active = false;
-            }
-
-            delta_x_ext_button = finger_position_x - (canvas_width / 2);
-            delta_y_ext_button = finger_position_y - (canvas_height  / 2);
-
-            if ((abs(delta_x_ext_button) < 200) && (abs(delta_y_ext_button) < 70))
-            {
-                suspended = true;
-                director.run_scene (shared_ptr< Scene >(new Menu_Scene));
+                screen_touched = false;
+                render_pause_menu ();
             }
         }
     }
@@ -618,9 +601,49 @@ namespace example
     {
         // Se comprueba si algún asteroide coliciona con la nave, entonces se reinicia la partida.
 
-        if (asteroid->intersects (*ship))
+        bool ColisionaUnaVez = false;
+        bool ColisionaDosVeces = false;
+
+        if (asteroid->intersects (*ship) && ColisionaUnaVez == false)
         {
-            restart_game();
+            ColisionaUnaVez = true;
+
+            switch (vidas)
+            {
+                case 3:
+                    vidas = 2;
+                    h_life_3->hide();
+                    break;
+            }
+        }
+        else if (asteroid->intersects (*ship) && ColisionaUnaVez == true)
+        {
+            bool ColisionaDosVeces = true;
+
+            switch (vidas)
+            {
+                case 2:
+                    vidas = 1;
+                    h_life_2->hide();
+                    break;
+
+                case 1:
+                    vidas = 0;
+                    h_life_1->hide();
+                    //restart_game();
+                    break;
+            }
+        }
+        else if (asteroid->intersects (*ship) && ColisionaDosVeces == true)
+        {
+            switch (vidas)
+            {
+                case 1:
+                    vidas = 0;
+                    h_life_1->hide();
+                    restart_game();
+                    break;
+            }
         }
 
         // Se comprueba si algún asteroide coliciona con algún borde, en cuyo caso se ajusta su
@@ -693,6 +716,59 @@ namespace example
         for (auto & sprite : sprites)
         {
             sprite->render (canvas);
+        }
+    }
+
+    // ---------------------------------------------------------------------------------------------
+
+    void Game_Scene::render_pause_menu ()
+    {
+        // Se crean los Sprites necesarios para el menu de pausa:
+
+        Sprite_Handle         pause_menu(new Sprite( textures[ID(pause_menu)].get () ));
+        Sprite_Handle         resume_button(new Sprite( textures[ID(resume_button)].get () ));
+        Sprite_Handle         exit_button(new Sprite( textures[ID(exit_button)].get () ));
+        Sprite_Handle         blue(new Sprite( textures[ID(blue)].get () ));
+
+        sprites.push_back      (pause_menu);
+        sprites.push_back      (resume_button);
+        sprites.push_back      (exit_button);
+        sprites.push_back      (blue);
+
+        p_menu = pause_menu.get ();
+        res_button = resume_button.get ();
+        ext_button = exit_button.get ();
+        blue_ball = blue.get ();
+
+        p_menu->set_position ({ canvas_width / 2, canvas_height  / 2 });
+        res_button->set_position ({ canvas_width / 2, canvas_height  / 2 });
+        ext_button->set_position ({ canvas_width / 2, canvas_height  / 4 });
+        blue_ball->set_position ({ canvas_width / 2, canvas_height  / 4 });
+
+        // Se comprueba si el usuario quiere seguir jugando o salir:
+
+        if(screen_touched == false)
+        {
+            //state = GAME_PAUSED;
+
+            delta_x_res_button = finger_position_x - (canvas_width / 2);
+            delta_y_res_button = finger_position_y - (canvas_height  / 2);
+
+            if ((abs(delta_x_res_button) < 150) && (abs(delta_y_res_button) < 50))
+            {
+                //resume();
+                //state = RUNNING;
+                director.run_scene (shared_ptr< Scene >(new Game_Scene));
+            }
+
+            delta_x_ext_button = finger_position_x - (canvas_width / 2);
+            delta_y_ext_button = finger_position_y - (canvas_height  / 2);
+
+            if ((abs(delta_x_ext_button) < 150) && (abs(delta_y_ext_button) < 50))
+            {
+                //suspend ();
+                director.run_scene (shared_ptr< Scene >(new Menu_Scene));
+            }
         }
     }
 }
